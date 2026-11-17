@@ -1,0 +1,27 @@
+{
+  "project": "Preview demo",
+  "synthetic": true,
+  "status": "ready",
+  "views": [
+    "Source",
+    "Preview",
+    "Split"
+  ],
+  "features": {
+    "markdown": {
+      "tables": true,
+      "taskLists": true,
+      "fencedCode": true
+    },
+    "json": {
+      "collapsibleTree": true,
+      "formatWithUndo": true
+    },
+    "html": {
+      "interactive": true,
+      "offline": true,
+      "isolated": true
+    }
+  },
+  "note": "Demo content only; no personal data."
+}

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Local preview playground</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;color:#ecf4ff;background:#101827}
+*{box-sizing:border-box}body{margin:0;padding:48px 56px;background:radial-gradient(ellipse at 85% 12%,#253c62 0,transparent 55%),#101827;min-height:100vh}
+main{max-width:1050px;margin:auto}.eyebrow{font-size:12px;font-weight:700;letter-spacing:.19em;color:#7ee7cc;text-transform:uppercase}
+h1{font-size:44px;letter-spacing:-.045em;line-height:1.1;margin:18px 0 16px}p{color:#acbed6;line-height:1.65}.intro{max-width:620px;font-size:17px}
+.grid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-top:32px}.card{border:1px solid #3a4d68;border-radius:20px;background:#17243ae8;padding:26px}h2{font-size:19px;margin:0 0 12px}.card p{font-size:14px}.badge{display:inline-block;border:1px solid #397c70;background:#163d39;color:#9af4d9;border-radius:99px;font-size:12px;padding:6px 11px}
+button{font:inherit;font-weight:650;border:0;border-radius:10px;background:#87eacb;color:#102923;padding:12px 20px;cursor:pointer;margin-top:10px}button:hover{background:#b3f6e2}#count{color:#e5fff7;font-weight:700}svg{display:block;width:100%;height:180px;margin-top:8px}.orbit{transform-origin:160px 90px;animation:turn 16s linear infinite}@keyframes turn{to{transform:rotate(360deg)}}
+footer{margin-top:26px;color:#8196b3;font-size:12px}@media(max-width:720px){body{padding:28px}.grid{grid-template-columns:1fr}h1{font-size:34px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">GNOME Text Editor Enhanced / HTML preview</div>
+  <h1>Your HTML. Alive, right here.</h1>
+  <p class="intro">Preview a complete page with its own CSS, SVG and in-page JavaScript. Keep your source local and your workflow in one editor.</p>
+  <div class="grid">
+    <section class="card">
+      <span class="badge">Offline demonstration</span>
+      <h2 style="margin-top:24px">A little motion. No dependencies.</h2>
+      <p>This SVG scene is animated with CSS. No online assets or libraries are needed.</p>
+      <svg viewBox="0 0 320 180" role="img" aria-label="Animated orbital illustration">
+        <ellipse cx="160" cy="90" rx="130" ry="63" fill="none" stroke="#496787"/>
+        <ellipse cx="160" cy="90" rx="87" ry="40" fill="none" stroke="#344d6c"/>
+        <circle cx="160" cy="90" r="27" fill="#ffd78a"/>
+        <circle cx="151" cy="82" r="7" fill="#fff0c5" opacity=".7"/>
+        <g class="orbit"><circle cx="285" cy="90" r="12" fill="#87eacb"/><circle cx="215" cy="90" r="5" fill="#b7a4ff"/></g>
+      </svg>
+    </section>
+    <section class="card">
+      <h2>Working in-page controls</h2>
+      <p>The button below runs JavaScript inside the isolated preview.</p>
+      <button type="button" onclick="this.dataset.n=Number(this.dataset.n||0)+1;document.getElementById('count').textContent=this.dataset.n+' clicks registered'">Try the interaction &rarr;</button>
+      <p id="count" aria-live="polite">Ready when you are.</p>
+      <hr style="border:0;border-top:1px solid #3a4d68;margin:28px 0">
+      <h2>Designed to stay local</h2>
+      <p>Inline styling and scripts work. Network requests, local-file access and browsing away stay blocked.</p>
+    </section>
+  </div>
+  <footer>Synthetic demo content for screenshots. No personal documents or external resources.</footer>
+</main>
+</body>
+</html>

@@ -4,6 +4,28 @@ GNOME Text Editor with **local Markdown, JSON, JSON Lines and HTML previews**, e
 
 This is a community enhancement of [GNOME Text Editor](https://gitlab.gnome.org/GNOME/gnome-text-editor), based on the **50.1 release**. It is not a new editor written from scratch, and is not an official GNOME release.
 
+## Screenshots
+
+Captured from the installed editor using the synthetic demo files linked below. No personal documents or desktop content are shown.
+
+### Markdown — source and rendered preview
+
+Headings, task lists, tables and fenced code in **Split View**. [Open the demo](examples/showcase.md).
+
+![Markdown Split View with source on the left and rendered headings, task lists, a table and a code block on the right](docs/screenshots/markdown.png)
+
+### JSON — collapsible tree
+
+Syntax-highlighted source beside an expandable object/array tree, with **Format JSON** available in the toolbar. [Open the demo](examples/showcase.json).
+
+![JSON Split View with source on the left and expanded nested objects and an array on the right](docs/screenshots/json.png)
+
+### HTML — a complete interactive page
+
+Full-document **Preview** with inline CSS, animated SVG and a working in-page JavaScript button. [Open the demo](examples/showcase.html).
+
+![HTML Preview displaying a styled offline page with an SVG orbital illustration and an interactive button](docs/screenshots/html.png)
+
 ## Current features
 
 - **HTML:** full-document rendering for `.html`, `.htm` and the HTML Document Type. Inline CSS, SVG, canvas and JavaScript controls run in an isolated, opaque-origin frame. Source / Preview / Split and live updates work without saving. The exact Three.js r128 CDN dependency is bundled for offline 3D previews; other online resources and local-file requests stay blocked.
@@ -55,7 +77,7 @@ Before updating an installed editor, save documents and retain the original dist
 
 ## Demo files and privacy
 
-`examples/` contains synthetic demonstration text only. This repository deliberately excludes personal JSONL datasets, editor session backups, settings dumps, desktop screenshots, local package staging directories and build output. No screenshot of a personal document is published.
+`examples/` contains synthetic demonstration text only. The curated app screenshots in `docs/screenshots/` use those examples in a separate demo session. This repository deliberately excludes personal JSONL datasets, editor session backups, settings dumps, personal desktop captures, local package staging directories and build output. No screenshot of a personal document is published.
 
 ## License and attribution
 
