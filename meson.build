@@ -1,5 +1,5 @@
 project('gnome-text-editor', 'c',
-          version: '50.1',
+          version: '50.1.1',
     meson_version: '>= 0.60.0',
   default_options: [ 'warning_level=2', 'c_std=gnu17' ],
 )
@@ -9,7 +9,9 @@ cc = meson.get_compiler('c')
 gnome = import('gnome')
 i18n = import('i18n')
 
-if get_option('development')
+if get_option('preview_build')
+  app_id = 'org.gnome.TextEditor.Preview'
+elif get_option('development')
   app_id = 'org.gnome.TextEditor.Devel'
 else
   app_id = 'org.gnome.TextEditor'

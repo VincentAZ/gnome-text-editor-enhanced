@@ -20,6 +20,8 @@ editor_sources = [
   'editor-newline-model.c',
   'editor-open-popover.c',
   'editor-page.c',
+  'editor-page-preview.c',
+  'editor-preview-render.c',
   'editor-page-actions.c',
   'editor-page-gsettings.c',
   'editor-page-settings.c',
@@ -53,10 +55,16 @@ editor_sources = [
   'editor-window.c',
   'editor-window-actions.c',
   'editor-window-dnd.c',
-  'main.c',
 ]
 
+cmark_dep = dependency('libcmark-gfm')
+cmark_extensions_dep = cc.find_library('cmark-gfm-extensions')
+webkit_dep = dependency('webkitgtk-6.0', version: '>= 2.40')
+
 editor_deps = [
+  cmark_dep,
+  cmark_extensions_dep,
+  webkit_dep,
   cc.find_library('m', required: false),
   libglib_dep,
   libgtk_dep,
@@ -114,11 +122,29 @@ if get_option('editorconfig').enabled()
   subdir('editorconfig')
 endif
 
-editor = executable('gnome-text-editor', editor_sources + editor_enums + [build_ident_h],
-  include_directories: [include_directories('..'),
-                        include_directories('editorconfig')],
-               c_args: editor_c_args,
-         dependencies: editor_deps,
-        win_subsystem: 'windows',
-              install: true,
+editor_core = static_library('editor-core', editor_sources + editor_enums + [build_ident_h],
+  include_directories: [include_directories('..'), include_directories('editorconfig')],
+  c_args: editor_c_args,
+  dependencies: editor_deps,
 )
+editor = executable('gnome-text-editor', 'main.c', build_ident_h,
+  include_directories: include_directories('..'),
+  c_args: editor_c_args,
+  link_whole: editor_core,
+  dependencies: editor_deps,
+  win_subsystem: 'windows',
+  install: true,
+)
+
+preview_render_test = executable('test-preview-render', ['test-preview-render.c', 'editor-preview-render.c'], dependencies: [libglib_dep, cmark_dep, cmark_extensions_dep])
+test('preview-render', preview_render_test)
+
+preview_page_test = executable('test-preview-page', 'test-preview-page.c',
+  include_directories: include_directories('..'),
+  link_whole: editor_core,
+  dependencies: editor_deps,
+)
+if find_program('xvfb-run', required: false).found() and find_program('dbus-run-session', required: false).found()
+  test('preview-page', find_program('sh'),
+    args: [files('run-preview-page-test.sh'), meson.project_build_root(), preview_page_test], timeout: 120)
+endif

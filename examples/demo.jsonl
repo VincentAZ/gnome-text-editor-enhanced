@@ -1,0 +1,2 @@
+{"id":1,"role":"demo","message":"Synthetic first record"}
+{"id":2,"role":"demo","message":"Synthetic second record","tags":["local","preview"]}

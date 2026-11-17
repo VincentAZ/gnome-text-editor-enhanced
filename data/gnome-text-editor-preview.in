@@ -1,0 +1,5 @@
+#!/bin/sh
+# Use this edition's compiled schema, without installing a duplicate system schema.
+GSETTINGS_SCHEMA_DIR="@datadir@/glib-2.0/schemas"
+export GSETTINGS_SCHEMA_DIR
+exec "@bindir@/gnome-text-editor" "$@"

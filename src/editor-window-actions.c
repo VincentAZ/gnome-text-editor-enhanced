@@ -620,6 +620,18 @@ editor_window_actions_page_zoom_one_cb (GtkWidget  *widget,
   _editor_page_zoom_one (editor_window_get_visible_page (self));
 }
 
+static void
+preview_action (GtkWidget *widget, const char *name, GVariant *param)
+{
+  EditorPage *page = editor_window_get_visible_page (EDITOR_WINDOW (widget));
+  if (!page) return;
+  if (g_str_equal (name, "page.preview-mode"))
+    _editor_page_preview_set_mode (page, g_variant_get_string (param, NULL));
+  else if (g_str_equal (name, "page.toggle-preview"))
+    _editor_page_preview_toggle (page);
+  else _editor_page_preview_format_json (page);
+}
+
 void
 _editor_window_class_actions_init (EditorWindowClass *klass)
 {
@@ -733,6 +745,9 @@ _editor_window_class_actions_init (EditorWindowClass *klass)
                                    "page.zoom-one",
                                    NULL,
                                    editor_window_actions_page_zoom_one_cb);
+  gtk_widget_class_install_action (widget_class, "page.preview-mode", "s", preview_action);
+  gtk_widget_class_install_action (widget_class, "page.toggle-preview", NULL, preview_action);
+  gtk_widget_class_install_action (widget_class, "page.format-json", NULL, preview_action);
 }
 
 void

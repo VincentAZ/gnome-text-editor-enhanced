@@ -35,11 +35,18 @@
 
 G_BEGIN_DECLS
 
+typedef struct _EditorPagePreview EditorPagePreview;
+
 struct _EditorPage
 {
   GtkWidget                parent_instance;
 
   GCancellable            *cancellable;
+  EditorPagePreview    *preview_state;
+  GtkPaned            *preview_paned;
+  GtkBox              *preview_box;
+  GtkBox              *preview_toolbar;
+  GtkWidget           *source_box;
 
   EditorDocument          *document;
   EditorPageSettings      *settings;
@@ -113,3 +120,9 @@ char         *_editor_page_get_zoom_label         (EditorPage           *self);
 GCancellable *_editor_page_get_cancellable        (EditorPage           *self);
 
 G_END_DECLS
+
+void _editor_page_preview_init (EditorPage *self);
+void _editor_page_preview_shutdown (EditorPage *self);
+void _editor_page_preview_set_mode (EditorPage *self, const char *mode);
+void _editor_page_preview_toggle (EditorPage *self);
+void _editor_page_preview_format_json (EditorPage *self);

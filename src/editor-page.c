@@ -581,6 +581,7 @@ editor_page_constructed (GObject *object)
                    G_SETTINGS_BIND_GET);
 
   _editor_page_vim_init (self);
+  _editor_page_preview_init (self);
 }
 
 static gboolean
@@ -740,6 +741,7 @@ editor_page_dispose (GObject *object)
 {
   EditorPage *self = (EditorPage *)object;
 
+  _editor_page_preview_shutdown (self);
   g_clear_handle_id (&self->queued_hide_position, g_source_remove);
 
   if (self->document != NULL)
@@ -945,6 +947,10 @@ editor_page_class_init (EditorPageClass *klass)
   gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
   gtk_widget_class_set_css_name (widget_class, "page");
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/TextEditor/ui/editor-page.ui");
+  gtk_widget_class_bind_template_child (widget_class, EditorPage, preview_paned);
+  gtk_widget_class_bind_template_child (widget_class, EditorPage, preview_box);
+  gtk_widget_class_bind_template_child (widget_class, EditorPage, preview_toolbar);
+  gtk_widget_class_bind_template_child (widget_class, EditorPage, source_box);
   gtk_widget_class_bind_template_child (widget_class, EditorPage, box);
   gtk_widget_class_bind_template_child (widget_class, EditorPage, goto_line_revealer);
   gtk_widget_class_bind_template_child (widget_class, EditorPage, goto_line_entry);
