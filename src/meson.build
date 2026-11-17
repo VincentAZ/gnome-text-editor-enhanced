@@ -146,5 +146,8 @@ preview_page_test = executable('test-preview-page', 'test-preview-page.c',
 )
 if find_program('xvfb-run', required: false).found() and find_program('dbus-run-session', required: false).found()
   test('preview-page', find_program('sh'),
-    args: [files('run-preview-page-test.sh'), meson.project_build_root(), preview_page_test], timeout: 120)
+    args: [files('run-preview-page-test.sh'), meson.project_build_root(), preview_page_test], timeout: 120, is_parallel: false)
+  test('preview-html', find_program('sh'),
+    args: [files('run-preview-page-test.sh'), meson.project_build_root(), preview_page_test],
+    env: {'EDITOR_TEST_HTML_ONLY': '1'}, timeout: 120, is_parallel: false)
 endif

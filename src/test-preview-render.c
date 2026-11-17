@@ -12,7 +12,27 @@ static void test_detect (void)
   g_assert_cmpint (editor_preview_detect ("a.ndjson", NULL), ==, EDITOR_PREVIEW_JSONL);
   g_assert_cmpint (editor_preview_detect (NULL, "markdown"), ==, EDITOR_PREVIEW_MARKDOWN);
   g_assert_cmpint (editor_preview_detect (NULL, "json"), ==, EDITOR_PREVIEW_JSON);
+  g_assert_cmpint (editor_preview_detect ("a.HTML", NULL), ==, EDITOR_PREVIEW_HTML);
+  g_assert_cmpint (editor_preview_detect ("a.htm", NULL), ==, EDITOR_PREVIEW_HTML);
+  g_assert_cmpint (editor_preview_detect (NULL, "html"), ==, EDITOR_PREVIEW_HTML);
   g_assert_cmpint (editor_preview_detect ("a.txt", NULL), ==, EDITOR_PREVIEW_NONE);
+}
+
+static void test_html (void)
+{
+  g_autoptr(GError) error = NULL;
+  g_autofree char *html = editor_preview_render (
+      "<!doctype html><title>A & B</title><style>body{background:red}</style>"
+      "<canvas></canvas><script>document.body.dataset.ready='yes'</script>",
+      EDITOR_PREVIEW_HTML, FALSE, &error);
+  g_assert_no_error (error);
+  g_assert_nonnull (strstr (html, "sandbox='allow-scripts'"));
+  g_assert_null (strstr (html, "allow-same-origin"));
+  g_assert_nonnull (strstr (html, "connect-src 'none'"));
+  g_assert_nonnull (strstr (html, "form-action 'none'"));
+  g_assert_nonnull (strstr (html, "&lt;script&gt;"));
+  g_assert_nonnull (strstr (html, "A &amp; B"));
+  g_assert_nonnull (strstr (html, "&lt;canvas&gt;"));
 }
 
 static void test_markdown (void)
@@ -120,34 +140,91 @@ static void test_jsonl_error (void)
   g_assert_nonnull (strstr (error->message, "Line 3"));
 }
 
-static void test_limits (void)
+static void test_large_input (void)
 {
   g_autoptr(GError) error = NULL;
-  g_autofree char *huge = g_strnfill (EDITOR_PREVIEW_MAX_BYTES + 1, ' ');
-  g_autofree char *out = editor_preview_render (huge, EDITOR_PREVIEW_MARKDOWN, FALSE, &error);
-  g_autoptr(GString) deep = g_string_new (NULL);
-  g_autoptr(GString) wide = g_string_new ("[");
+  g_autoptr(GString) huge = g_string_new ("{\"payload\":\"");
+  g_autofree char *payload = g_strnfill (3 * 1024 * 1024, 'x');
+  g_autofree char *formatted = NULL;
+  g_autofree char *html = NULL;
+  g_string_append (huge, payload); g_string_append (huge, "\",\"last\":true}");
+  formatted = editor_preview_format_json (huge->str, &error);
+  g_assert_no_error (error); g_assert_nonnull (formatted);
+  g_assert_nonnull (strstr (formatted, "\"last\": true"));
+  html = editor_preview_render (huge->str, EDITOR_PREVIEW_JSON, FALSE, &error);
+  g_assert_no_error (error); g_assert_nonnull (html);
+  g_clear_pointer (&html, g_free);
+  html = editor_preview_render ("\xff", EDITOR_PREVIEW_JSON, FALSE, &error);
+  g_assert_null (html); g_assert_nonnull (error);
+}
+
+static void test_many_records (void)
+{
+  g_autoptr(GError) error = NULL;
   g_autoptr(GString) lines = g_string_new (NULL);
-  g_assert_null (out);
-  g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NO_SPACE);
-  g_clear_error (&error);
-  for (guint i = 0; i < 130; i++) g_string_append_c (deep, '[');
-  g_string_append_c (deep, '0');
-  for (guint i = 0; i < 130; i++) g_string_append_c (deep, ']');
-  out = editor_preview_format_json (deep->str, &error);
-  g_assert_null (out);
-  g_assert_nonnull (strstr (error->message, "128"));
-  g_clear_error (&error);
-  for (guint i = 0; i < 20001; i++) g_string_append (wide, i ? ",0" : "0");
-  g_string_append_c (wide, ']');
-  out = editor_preview_format_json (wide->str, &error);
-  g_assert_null (out);
-  g_assert_nonnull (strstr (error->message, "20,000"));
-  g_clear_error (&error);
-  for (guint i = 0; i < 501; i++) g_string_append (lines, "{}\n");
-  out = editor_preview_render (lines->str, EDITOR_PREVIEW_JSONL, FALSE, &error);
-  g_assert_null (out);
-  g_assert_nonnull (strstr (error->message, "500 records"));
+  g_autofree char *html = NULL;
+  for (guint i = 0; i < 1200; i++) g_string_append (lines, "{\"ok\":true}\n");
+  html = editor_preview_render (lines->str, EDITOR_PREVIEW_JSONL, FALSE, &error);
+  g_assert_no_error (error); g_assert_nonnull (strstr (html, "Record 1200 · Line 1200"));
+  g_clear_pointer (&html, g_free);
+  html = editor_preview_render_section ("{\"ok\":true}\n{\"next\":1}\n", EDITOR_PREVIEW_JSONL,
+      FALSE, 5001, TRUE, FALSE, FALSE, 0, &error);
+  g_assert_no_error (error); g_assert_nonnull (strstr (html, "Record at Line 5002"));
+}
+
+static void test_format_large_structure (void)
+{
+  g_autoptr(GError) error = NULL;
+  g_autoptr(GString) text = g_string_new ("[");
+  g_autofree char *formatted = NULL;
+  g_autofree char *html = NULL;
+  for (guint i = 0; i < 25000; i++) g_string_append (text, i ? ",1" : "1");
+  g_string_append_c (text, ']');
+  formatted = editor_preview_format_json (text->str, &error);
+  g_assert_no_error (error); g_assert_nonnull (formatted);
+  html = editor_preview_render_section (text->str, EDITOR_PREVIEW_JSON, FALSE, 1,
+                                       FALSE, FALSE, FALSE, 0, &error);
+  g_assert_no_error (error); g_assert_nonnull (strstr (html, "JSON source section"));
+  g_clear_pointer (&formatted, g_free); g_string_set_size (text, 0);
+  for (guint i = 0; i < 256; i++) g_string_append_c (text, '[');
+  g_string_append (text, "0");
+  for (guint i = 0; i < 256; i++) g_string_append_c (text, ']');
+  formatted = editor_preview_format_json (text->str, &error);
+  g_assert_no_error (error); g_assert_nonnull (formatted);
+}
+
+static void test_format_invalid (void)
+{
+  const char *invalid[] = { "", "[1,]", "{\"a\":1,}", "{a:1}", "{\"a\" 1}", "true false", "01", "1e+", "[", "{", "\"bad\\x\"", "\"raw\nline\"" };
+  for (guint i = 0; i < G_N_ELEMENTS (invalid); i++)
+    {
+      g_autoptr(GError) error = NULL;
+      g_autofree char *formatted = editor_preview_format_json (invalid[i], &error);
+      g_assert_null (formatted); g_assert_nonnull (error);
+    }
+}
+
+static void test_section_safety_and_controls (void)
+{
+  g_autoptr(GError) error = NULL;
+  g_autofree char *html = editor_preview_render_section ("{\"incomplete\":\"<script>alert(1)</script>",
+      EDITOR_PREVIEW_JSON, FALSE, 1, TRUE, FALSE, TRUE, 0, &error);
+  g_assert_no_error (error); g_assert_null (strstr (html, "<script>alert"));
+  g_assert_nonnull (strstr (html, "&lt;script&gt;"));
+  g_clear_pointer (&html, g_free);
+  html = editor_preview_render_section ("{\"a\":[{\"b\":[1]}]}", EDITOR_PREVIEW_JSON, FALSE, 1,
+                                       FALSE, FALSE, FALSE, 1, &error);
+  g_assert_no_error (error); g_assert_null (strstr (html, "<details>"));
+  g_assert_nonnull (strstr (html, "<details open>"));
+  g_clear_pointer (&html, g_free);
+  html = editor_preview_render_section ("{\"a\":[{\"b\":[1]}]}", EDITOR_PREVIEW_JSON, FALSE, 1,
+                                       FALSE, FALSE, FALSE, -1, &error);
+  g_assert_no_error (error); g_assert_null (strstr (html, "<details open>"));
+  g_clear_pointer (&html, g_free);
+  html = editor_preview_render_section ("unfinished\n{\"valid\":true}\n", EDITOR_PREVIEW_JSONL,
+      FALSE, 900, TRUE, TRUE, FALSE, 0, &error);
+  g_assert_no_error (error); g_assert_nonnull (strstr (html, "Record at Line 901"));
+  g_assert_nonnull (strstr (html, "continues in another section"));
 }
 
 static void test_errors_safe (void)
@@ -162,6 +239,7 @@ int main (int argc, char **argv)
 {
   g_test_init (&argc, &argv, NULL);
   g_test_add_func ("/preview/detect", test_detect);
+  g_test_add_func ("/preview/html", test_html);
   g_test_add_func ("/preview/markdown", test_markdown);
   g_test_add_func ("/preview/security", test_security);
   g_test_add_func ("/preview/json-tree", test_tree);
@@ -170,7 +248,11 @@ int main (int argc, char **argv)
   g_test_add_func ("/preview/scalars-unicode", test_scalars);
   g_test_add_func ("/preview/json-lines", test_jsonl);
   g_test_add_func ("/preview/json-lines-error-location", test_jsonl_error);
-  g_test_add_func ("/preview/limits", test_limits);
+  g_test_add_func ("/preview/large-input", test_large_input);
+  g_test_add_func ("/preview/many-records", test_many_records);
+  g_test_add_func ("/preview/format-large-structure", test_format_large_structure);
+  g_test_add_func ("/preview/format-invalid", test_format_invalid);
+  g_test_add_func ("/preview/section-safety-controls", test_section_safety_and_controls);
   g_test_add_func ("/preview/error-escaping", test_errors_safe);
   return g_test_run ();
 }

@@ -39,4 +39,8 @@
     <file preprocess="xml-stripblanks">styles/peninsula.xml</file>
     <file preprocess="xml-stripblanks">styles/printing.xml</file>
   </gresource>
+  <gresource prefix="/org/gnome/TextEditor/preview">
+    <file compressed="true" alias="three-r128.min.js">preview-vendor/three-r128.min.js</file>
+    <file alias="THREE-LICENSE">preview-vendor/THREE-LICENSE</file>
+  </gresource>
 </gresources>

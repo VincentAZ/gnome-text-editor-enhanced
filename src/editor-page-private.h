@@ -126,3 +126,5 @@ void _editor_page_preview_shutdown (EditorPage *self);
 void _editor_page_preview_set_mode (EditorPage *self, const char *mode);
 void _editor_page_preview_toggle (EditorPage *self);
 void _editor_page_preview_format_json (EditorPage *self);
+
+void _editor_page_preview_go_to_offset (EditorPage *self, int offset);
